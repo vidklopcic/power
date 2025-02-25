@@ -9,7 +9,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.Registrar
+import io.flutter.plugin.common.BinaryMessenger
 
 /** PowerPlugin */
 public class PowerPlugin : FlutterPlugin, MethodCallHandler {
@@ -23,16 +23,23 @@ public class PowerPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-        applicationContext = flutterPluginBinding.applicationContext
-        channel = MethodChannel(flutterPluginBinding.getFlutterEngine().getDartExecutor(), "com.amir_p/power")
-        channel.setMethodCallHandler(this);
+        setupChannel(flutterPluginBinding.applicationContext, flutterPluginBinding.binaryMessenger)
+    }
+
+    private fun setupChannel(context: Context, messenger: BinaryMessenger) {
+        applicationContext = context
+        channel = MethodChannel(messenger, "com.amir_p/power")
+        channel.setMethodCallHandler(this)
     }
 
     companion object {
+        // This static function is optional and equivalent to onAttachedToEngine.
+        // It supports the old pre-Flutter-1.12 Android projects.
+        // The function is kept for backward compatibility
         @JvmStatic
-        fun registerWith(registrar: Registrar) {
-            val channel = MethodChannel(registrar.messenger(), "com.amir_p/power")
-            channel.setMethodCallHandler(PowerPlugin(registrar.context()))
+        fun registerWith(registrar: io.flutter.plugin.common.PluginRegistry.Registrar) {
+            val instance = PowerPlugin(registrar.context())
+            instance.setupChannel(registrar.context(), registrar.messenger())
         }
     }
 
